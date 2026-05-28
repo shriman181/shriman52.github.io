@@ -1,0 +1,1811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zynthos — Criminal Justice Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --amber: #F5A623;
+    --amber-bright: #FFB93E;
+    --cyan: #00D4C8;
+    --cyan-dim: #00A89E;
+    --navy: #0B0F1A;
+    --navy-mid: #111827;
+    --concrete: #1C2235;
+    --slate: #2D3748;
+    --steel: #4A5568;
+    --fog: #8892A4;
+    --ghost: #CBD5E0;
+    --white: #F7F9FC;
+    --red-alert: #FF4545;
+    --green-clear: #2DD4BF;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--navy);
+    color: var(--white);
+    font-family: 'Syne', sans-serif;
+    overflow-x: hidden;
+    cursor: default;
+  }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--navy); }
+  ::-webkit-scrollbar-thumb { background: var(--amber); border-radius: 2px; }
+
+  /* ── NOISE TEXTURE OVERLAY ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.5;
+  }
+
+  /* ── GRID BACKGROUND ── */
+  .grid-bg {
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,212,200,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,200,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 3rem;
+    height: 64px;
+    background: rgba(11,15,26,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(245,166,35,0.15);
+  }
+
+  .nav-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    letter-spacing: 0.12em;
+    color: var(--amber);
+    text-decoration: none;
+  }
+
+  .nav-logo span {
+    color: var(--cyan);
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 2.5rem;
+    list-style: none;
+  }
+
+  .nav-links a {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--fog);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .nav-links a:hover { color: var(--amber); }
+
+  .nav-cta {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: transparent;
+    color: var(--amber) !important;
+    border: 1px solid var(--amber);
+    padding: 0.5rem 1.2rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .nav-cta:hover {
+    background: var(--amber);
+    color: var(--navy) !important;
+  }
+
+  /* ── SECTIONS ── */
+  section { position: relative; z-index: 1; }
+
+  /* ── HERO ── */
+  #hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 8rem 3rem 4rem;
+    overflow: hidden;
+  }
+
+  .hero-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .hero-eyebrow::before {
+    content: '';
+    display: block;
+    width: 32px;
+    height: 1px;
+    background: var(--cyan);
+  }
+
+  .hero-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(4rem, 11vw, 9.5rem);
+    line-height: 0.92;
+    letter-spacing: 0.04em;
+    color: var(--white);
+    max-width: 900px;
+    margin-bottom: 1rem;
+  }
+
+  .hero-title .accent { color: var(--amber); }
+  .hero-title .accent-cyan { color: var(--cyan); }
+
+  .hero-sub {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 400;
+    color: var(--fog);
+    max-width: 520px;
+    line-height: 1.7;
+    margin-bottom: 2.5rem;
+  }
+
+  .hero-actions {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .btn-primary {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    background: var(--amber);
+    color: var(--navy);
+    border: none;
+    padding: 0.9rem 2rem;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.25s;
+    text-decoration: none;
+    display: inline-block;
+    clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+  }
+
+  .btn-primary:hover {
+    background: var(--amber-bright);
+    transform: translateY(-2px);
+  }
+
+  .btn-ghost {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    background: transparent;
+    color: var(--fog);
+    border: 1px solid var(--slate);
+    padding: 0.9rem 2rem;
+    cursor: pointer;
+    transition: all 0.25s;
+    text-decoration: none;
+    display: inline-block;
+  }
+
+  .btn-ghost:hover {
+    border-color: var(--cyan);
+    color: var(--cyan);
+  }
+
+  /* HERO STATS */
+  .hero-stats {
+    display: flex;
+    gap: 3rem;
+    margin-top: 4rem;
+    padding-top: 2.5rem;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .hero-stat-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.6rem;
+    color: var(--amber);
+    letter-spacing: 0.05em;
+    line-height: 1;
+  }
+
+  .hero-stat-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--fog);
+    margin-top: 0.3rem;
+  }
+
+  /* FLOATING CASE FILE */
+  .hero-casefile {
+    position: absolute;
+    right: 3rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 320px;
+    background: var(--concrete);
+    border: 1px solid rgba(245,166,35,0.2);
+    padding: 1.5rem;
+    animation: floatCard 5s ease-in-out infinite;
+  }
+
+  @keyframes floatCard {
+    0%, 100% { transform: translateY(-50%) rotate(-1deg); }
+    50% { transform: translateY(-52%) rotate(0.5deg); }
+  }
+
+  .casefile-header {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .casefile-id {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--fog);
+  }
+
+  .casefile-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .casefile-row:last-child { border-bottom: none; }
+
+  .casefile-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--fog);
+    letter-spacing: 0.05em;
+  }
+
+  .casefile-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--white);
+  }
+
+  .risk-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.25rem 0.6rem;
+  }
+
+  .risk-high { background: rgba(255,69,69,0.15); color: var(--red-alert); border: 1px solid rgba(255,69,69,0.3); }
+  .risk-med { background: rgba(245,166,35,0.15); color: var(--amber); border: 1px solid rgba(245,166,35,0.3); }
+  .risk-low { background: rgba(45,212,191,0.15); color: var(--green-clear); border: 1px solid rgba(45,212,191,0.3); }
+
+  .risk-bar-wrap {
+    width: 100%;
+    height: 3px;
+    background: var(--slate);
+    margin-top: 0.5rem;
+    border-radius: 2px;
+  }
+
+  .risk-bar-fill {
+    height: 100%;
+    background: var(--red-alert);
+    border-radius: 2px;
+    animation: fillBar 2s ease forwards;
+    animation-delay: 0.5s;
+    width: 0;
+  }
+
+  @keyframes fillBar {
+    to { width: 73%; }
+  }
+
+  .risk-score-large {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.5rem;
+    color: var(--amber);
+    line-height: 1;
+  }
+
+  .processing-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background: var(--cyan);
+    border-radius: 50%;
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.6); }
+  }
+
+  /* ── PROBLEM SECTION ── */
+  #problem {
+    padding: 7rem 3rem;
+    background: linear-gradient(180deg, var(--navy) 0%, var(--navy-mid) 100%);
+  }
+
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .section-label::before {
+    content: '';
+    display: block;
+    width: 24px;
+    height: 1px;
+    background: var(--cyan);
+  }
+
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2.8rem, 5vw, 4.5rem);
+    line-height: 1;
+    letter-spacing: 0.04em;
+    color: var(--white);
+    margin-bottom: 1.5rem;
+  }
+
+  .section-title .amber { color: var(--amber); }
+  .section-title .cyan { color: var(--cyan); }
+
+  .problem-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    margin-top: 3rem;
+  }
+
+  .problem-cell {
+    background: var(--concrete);
+    padding: 2rem;
+    border: 1px solid rgba(255,255,255,0.04);
+    transition: border-color 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .problem-cell::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px;
+    height: 0;
+    background: var(--amber);
+    transition: height 0.4s ease;
+  }
+
+  .problem-cell:hover::before { height: 100%; }
+  .problem-cell:hover { border-color: rgba(245,166,35,0.2); }
+
+  .problem-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 3.5rem;
+    color: rgba(245,166,35,0.12);
+    line-height: 1;
+    position: absolute;
+    top: 1rem;
+    right: 1.5rem;
+    letter-spacing: 0.04em;
+  }
+
+  .problem-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(245,166,35,0.1);
+    border: 1px solid rgba(245,166,35,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+  }
+
+  .problem-cell h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .problem-cell p {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.88rem;
+    color: var(--fog);
+    line-height: 1.65;
+  }
+
+  .problem-stat {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--amber);
+    margin-top: 0.75rem;
+    letter-spacing: 0.05em;
+  }
+
+  /* ── PRODUCTS ── */
+  #products {
+    padding: 7rem 3rem;
+    background: var(--navy);
+  }
+
+  .products-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 3.5rem;
+  }
+
+  .product-cards {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5px;
+  }
+
+  .product-card {
+    background: var(--concrete);
+    padding: 2.5rem 2rem;
+    border: 1px solid rgba(255,255,255,0.04);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s;
+  }
+
+  .product-card:hover {
+    background: var(--navy-mid);
+    border-color: rgba(0,212,200,0.2);
+  }
+
+  .product-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .product-card:hover::after { opacity: 1; }
+
+  .product-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--navy);
+    background: var(--cyan);
+    padding: 0.2rem 0.6rem;
+    display: inline-block;
+    margin-bottom: 1.2rem;
+  }
+
+  .product-card h3 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    letter-spacing: 0.06em;
+    color: var(--white);
+    margin-bottom: 0.75rem;
+    line-height: 1;
+  }
+
+  .product-card p {
+    font-size: 0.875rem;
+    color: var(--fog);
+    line-height: 1.7;
+    margin-bottom: 1.5rem;
+  }
+
+  .product-features {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .product-features li {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--fog);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    letter-spacing: 0.04em;
+  }
+
+  .product-features li::before {
+    content: '▸';
+    color: var(--amber);
+    font-size: 0.5rem;
+  }
+
+  .product-big {
+    grid-column: span 2;
+  }
+
+  .product-big-inner {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+  }
+
+  /* LIVE WIDGET */
+  .live-widget {
+    background: var(--navy);
+    border: 1px solid rgba(0,212,200,0.15);
+    padding: 1.25rem;
+  }
+
+  .widget-header {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .widget-live {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.55rem;
+    color: var(--fog);
+  }
+
+  .schedule-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.55rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+
+  .schedule-time {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--fog);
+    min-width: 50px;
+  }
+
+  .schedule-room {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--amber);
+    min-width: 50px;
+  }
+
+  .schedule-case {
+    font-size: 0.7rem;
+    color: var(--white);
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .schedule-status {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.55rem;
+    padding: 0.15rem 0.4rem;
+  }
+
+  .status-conflict { background: rgba(255,69,69,0.1); color: var(--red-alert); }
+  .status-ok { background: rgba(45,212,191,0.1); color: var(--green-clear); }
+  .status-pending { background: rgba(245,166,35,0.1); color: var(--amber); }
+
+  /* ── IMPACT ── */
+  #impact {
+    padding: 6rem 3rem;
+    background: var(--concrete);
+    position: relative;
+    overflow: hidden;
+  }
+
+  #impact::before {
+    content: 'JUSTICE';
+    position: absolute;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18rem;
+    color: rgba(255,255,255,0.012);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    white-space: nowrap;
+    letter-spacing: 0.1em;
+    pointer-events: none;
+  }
+
+  .impact-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    margin-top: 3rem;
+  }
+
+  .impact-cell {
+    background: var(--navy-mid);
+    padding: 2.5rem 1.5rem;
+    border: 1px solid rgba(255,255,255,0.04);
+    text-align: center;
+  }
+
+  .impact-number {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 3.8rem;
+    line-height: 1;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.4rem;
+  }
+
+  .impact-cell:nth-child(odd) .impact-number { color: var(--amber); }
+  .impact-cell:nth-child(even) .impact-number { color: var(--cyan); }
+
+  .impact-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--fog);
+    line-height: 1.5;
+  }
+
+  /* ── ETHICS ── */
+  #ethics {
+    padding: 7rem 3rem;
+    background: var(--navy);
+  }
+
+  .ethics-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5rem;
+    align-items: start;
+    margin-top: 3rem;
+  }
+
+  .ethics-text p {
+    font-size: 0.95rem;
+    color: var(--fog);
+    line-height: 1.8;
+    margin-bottom: 1.25rem;
+  }
+
+  .ethics-principles {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  .ethics-item {
+    background: var(--concrete);
+    padding: 1.25rem 1.5rem;
+    border: 1px solid rgba(255,255,255,0.04);
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    transition: border-color 0.2s;
+  }
+
+  .ethics-item:hover { border-color: rgba(245,166,35,0.2); }
+
+  .ethics-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--amber);
+    min-width: 24px;
+    padding-top: 0.2rem;
+  }
+
+  .ethics-item h4 {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--white);
+    margin-bottom: 0.3rem;
+  }
+
+  .ethics-item p {
+    font-size: 0.78rem;
+    color: var(--fog);
+    line-height: 1.6;
+  }
+
+  /* ── FOUNDER ── */
+  #founder {
+    padding: 7rem 3rem;
+    background: var(--navy-mid);
+    position: relative;
+    overflow: hidden;
+  }
+
+  #founder::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 500px;
+    height: 500px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(245,166,35,0.04) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .founder-layout {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 4rem;
+    align-items: start;
+    margin-top: 3rem;
+  }
+
+  .founder-card {
+    background: var(--concrete);
+    border: 1px solid rgba(245,166,35,0.2);
+    padding: 2rem;
+    position: relative;
+    clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));
+  }
+
+  .founder-avatar {
+    width: 80px;
+    height: 80px;
+    background: var(--amber);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    color: var(--navy);
+    margin-bottom: 1.25rem;
+    clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+  }
+
+  .founder-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    letter-spacing: 0.06em;
+    color: var(--white);
+    line-height: 1;
+    margin-bottom: 0.25rem;
+  }
+
+  .founder-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    margin-bottom: 1.5rem;
+  }
+
+  .founder-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .founder-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border: 1px solid rgba(245,166,35,0.3);
+    color: var(--amber);
+    padding: 0.2rem 0.6rem;
+  }
+
+  .founder-links {
+    display: flex;
+    gap: 0.75rem;
+  }
+
+  .founder-link {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--fog);
+    text-decoration: none;
+    border: 1px solid var(--slate);
+    padding: 0.4rem 0.8rem;
+    transition: all 0.2s;
+  }
+
+  .founder-link:hover { border-color: var(--cyan); color: var(--cyan); }
+
+  .founder-bio h3 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.4rem;
+    letter-spacing: 0.06em;
+    color: var(--white);
+    line-height: 1;
+    margin-bottom: 1.5rem;
+  }
+
+  .founder-bio h3 span { color: var(--amber); }
+
+  .founder-bio p {
+    font-size: 0.92rem;
+    color: var(--fog);
+    line-height: 1.8;
+    margin-bottom: 1.25rem;
+  }
+
+  .founder-mission {
+    background: var(--concrete);
+    border-left: 3px solid var(--amber);
+    padding: 1.25rem 1.5rem;
+    margin-top: 1.5rem;
+  }
+
+  .founder-mission p {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--white);
+    line-height: 1.7;
+    margin: 0;
+  }
+
+  .founder-stats {
+    display: flex;
+    gap: 2.5rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .founder-stat-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    color: var(--cyan);
+    line-height: 1;
+  }
+
+  .founder-stat-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.58rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--fog);
+    margin-top: 0.2rem;
+  }
+
+  /* ── CONTACT ── */
+  #contact {
+    padding: 7rem 3rem;
+    background: var(--concrete);
+    position: relative;
+  }
+
+  .contact-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    margin-top: 3rem;
+  }
+
+  .contact-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .form-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--fog);
+  }
+
+  .form-input, .form-select, .form-textarea {
+    background: var(--navy);
+    border: 1px solid var(--slate);
+    color: var(--white);
+    padding: 0.75rem 1rem;
+    font-family: 'Syne', sans-serif;
+    font-size: 0.85rem;
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    border-color: var(--amber);
+  }
+
+  .form-select option { background: var(--navy); }
+
+  .form-textarea {
+    resize: vertical;
+    min-height: 100px;
+  }
+
+  .contact-info h3 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    letter-spacing: 0.06em;
+    color: var(--white);
+    margin-bottom: 1rem;
+  }
+
+  .contact-info p {
+    font-size: 0.9rem;
+    color: var(--fog);
+    line-height: 1.7;
+    margin-bottom: 2rem;
+  }
+
+  .contact-item {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+    align-items: flex-start;
+  }
+
+  .contact-icon {
+    width: 36px;
+    height: 36px;
+    background: rgba(245,166,35,0.1);
+    border: 1px solid rgba(245,166,35,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 1rem;
+  }
+
+  .contact-item-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 0.2rem;
+  }
+
+  .contact-item-val {
+    font-size: 0.85rem;
+    color: var(--white);
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    background: var(--navy);
+    border-top: 1px solid rgba(245,166,35,0.1);
+    padding: 2.5rem 3rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .footer-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.6rem;
+    letter-spacing: 0.12em;
+    color: var(--amber);
+  }
+
+  .footer-logo span { color: var(--cyan); }
+
+  .footer-copy {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    color: var(--fog);
+  }
+
+  .footer-links {
+    display: flex;
+    gap: 2rem;
+  }
+
+  .footer-links a {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--fog);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .footer-links a:hover { color: var(--amber); }
+
+  /* UTILITY */
+  .fade-up {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+
+  .fade-up.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .delay-1 { transition-delay: 0.1s; }
+  .delay-2 { transition-delay: 0.2s; }
+  .delay-3 { transition-delay: 0.3s; }
+  .delay-4 { transition-delay: 0.4s; }
+
+  /* TICKER */
+  .ticker-wrap {
+    background: var(--amber);
+    overflow: hidden;
+    padding: 0.6rem 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  .ticker-inner {
+    display: flex;
+    gap: 0;
+    animation: ticker 28s linear infinite;
+    white-space: nowrap;
+  }
+
+  @keyframes ticker {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+  .ticker-item {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--navy);
+    padding: 0 2.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .ticker-dot {
+    width: 4px;
+    height: 4px;
+    background: var(--navy);
+    border-radius: 50%;
+    opacity: 0.5;
+  }
+
+  /* ── COUNTER ANIMATION ── */
+  .count-up { display: inline-block; }
+
+</style>
+</head>
+<body>
+
+<div class="grid-bg"></div>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">ZYNT<span>HOS</span></a>
+  <ul class="nav-links">
+    <li><a href="#problem">Problem</a></li>
+    <li><a href="#products">Solutions</a></li>
+    <li><a href="#impact">Impact</a></li>
+    <li><a href="#ethics">Ethics</a></li>
+    <li><a href="#founder">Founder</a></li>
+    <li><a href="#contact" class="nav-cta">Request Access</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-eyebrow">
+    <span class="processing-dot"></span>
+    Criminal Justice Intelligence Platform
+  </div>
+
+  <h1 class="hero-title">
+    FIX THE <span class="accent">SYSTEM</span><br>
+    FROM THE <span class="accent-cyan">INSIDE</span>
+  </h1>
+
+  <p class="hero-sub">
+    AI-powered analytics and automation for parole officers, courts, and public defenders. Built for the institutions that need it most — and can afford it least.
+  </p>
+
+  <div class="hero-actions">
+    <a href="#products" class="btn-primary">Explore Platform</a>
+    <a href="#founder" class="btn-ghost">Meet the Founder</a>
+  </div>
+
+  <div class="hero-stats">
+    <div>
+      <div class="hero-stat-num">2.1M</div>
+      <div class="hero-stat-label">Incarcerated individuals<br>in the US alone</div>
+    </div>
+    <div>
+      <div class="hero-stat-num">68%</div>
+      <div class="hero-stat-label">Recidivism rate within<br>3 years of release</div>
+    </div>
+    <div>
+      <div class="hero-stat-num">$0</div>
+      <div class="hero-stat-label">Commercial tooling<br>budget per officer</div>
+    </div>
+    <div>
+      <div class="hero-stat-num">43K</div>
+      <div class="hero-stat-label">Courts with zero case<br>management software</div>
+    </div>
+  </div>
+
+  <!-- FLOATING CASE FILE -->
+  <div class="hero-casefile">
+    <div class="casefile-header">
+      <span>Zynthos Risk Engine</span>
+      <span class="casefile-id">CASE #ZYN-2024-0847</span>
+    </div>
+
+    <div class="casefile-row">
+      <span class="casefile-label">Offender ID</span>
+      <span class="casefile-value">MR-7741-B</span>
+    </div>
+    <div class="casefile-row">
+      <span class="casefile-label">Risk Score</span>
+      <div style="display:flex;align-items:center;gap:0.75rem;">
+        <span class="risk-score-large">73</span>
+        <span class="risk-badge risk-high">High</span>
+      </div>
+    </div>
+    <div style="padding: 0.5rem 0 1rem;">
+      <div class="risk-bar-wrap">
+        <div class="risk-bar-fill"></div>
+      </div>
+    </div>
+    <div class="casefile-row">
+      <span class="casefile-label">Primary Factors</span>
+      <span class="casefile-value" style="font-size:0.58rem;color:var(--fog);">Peer network · Employment gap</span>
+    </div>
+    <div class="casefile-row">
+      <span class="casefile-label">Next Check-In</span>
+      <span class="casefile-value">Jun 04, 2025</span>
+    </div>
+    <div class="casefile-row">
+      <span class="casefile-label">Parole Officer</span>
+      <span class="casefile-value">PO-Reyes</span>
+    </div>
+    <div style="margin-top:1rem;padding-top:0.75rem;border-top:1px solid rgba(255,255,255,0.06);">
+      <div style="font-family:'DM Mono',monospace;font-size:0.55rem;letter-spacing:0.1em;color:var(--fog);text-transform:uppercase;margin-bottom:0.4rem;">AI Recommendation</div>
+      <div style="font-size:0.72rem;color:var(--cyan);line-height:1.5;">Increase check-in frequency. Flag for vocational placement within 30 days.</div>
+    </div>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div class="ticker-wrap" aria-hidden="true">
+  <div class="ticker-inner">
+    <span class="ticker-item">Recidivism Risk Modelling <span class="ticker-dot"></span></span>
+    <span class="ticker-item">Case Management Automation <span class="ticker-dot"></span></span>
+    <span class="ticker-item">Court Scheduling Optimisation <span class="ticker-dot"></span></span>
+    <span class="ticker-item">Legal Aid Document Generation <span class="ticker-dot"></span></span>
+    <span class="ticker-item">Parole Officer Intelligence <span class="ticker-dot"></span></span>
+    <span class="ticker-item">Bias-Audited AI Models <span class="ticker-dot"></span></span>
+    <span class="ticker-item">Recidivism Risk Modelling <span class="ticker-dot"></span></span>
+    <span class="ticker-item">Case Management Automation <span class="ticker-dot"></span></span>
+    <span class="ticker-item">Court Scheduling Optimisation <span class="ticker-dot"></span></span>
+    <span class="ticker-item">Legal Aid Document Generation <span class="ticker-dot"></span></span>
+    <span class="ticker-item">Parole Officer Intelligence <span class="ticker-dot"></span></span>
+    <span class="ticker-item">Bias-Audited AI Models <span class="ticker-dot"></span></span>
+  </div>
+</div>
+
+<!-- PROBLEM -->
+<section id="problem">
+  <div class="section-label">The Problem</div>
+  <h2 class="section-title">A SYSTEM RUNNING ON<br><span class="amber">SPREADSHEETS</span> & <span class="cyan">PAPER</span></h2>
+
+  <div class="problem-grid">
+    <div class="problem-cell fade-up">
+      <span class="problem-num">01</span>
+      <div class="problem-icon">⚖</div>
+      <h3>No Risk Intelligence</h3>
+      <p>Parole officers manage 80+ cases with zero predictive tooling. Recidivism risk is assessed through gut instinct and outdated static checklists that haven't changed in decades.</p>
+      <div class="problem-stat">▸ Avg PO caseload: 84 individuals</div>
+    </div>
+
+    <div class="problem-cell fade-up delay-1">
+      <span class="problem-num">02</span>
+      <div class="problem-icon">📋</div>
+      <h3>Manual Case Admin</h3>
+      <p>Hours per day lost to repetitive documentation — violation reports, compliance tracking, hearing prep — consuming the time parole officers need to actually help people reintegrate.</p>
+      <div class="problem-stat">▸ 40% of PO time is paperwork</div>
+    </div>
+
+    <div class="problem-cell fade-up delay-2">
+      <span class="problem-num">03</span>
+      <div class="problem-icon">🏛</div>
+      <h3>Court Scheduling Chaos</h3>
+      <p>Courtrooms run on legacy docket systems from the 1990s. Conflicts, no-shows, and overbooking cost millions in wasted judicial time and extend pretrial detention for defendants who can't afford bail.</p>
+      <div class="problem-stat">▸ 28% of court dates result in conflicts</div>
+    </div>
+
+    <div class="problem-cell fade-up delay-3">
+      <span class="problem-num">04</span>
+      <div class="problem-icon">📄</div>
+      <h3>Legal Aid Desert</h3>
+      <p>Public defenders carry crushing caseloads. Document generation — motions, briefs, letters — takes hours that should go toward actual legal representation. Most clinics have no AI tooling at all.</p>
+      <div class="problem-stat">▸ 1 public defender per 1,200 clients (avg)</div>
+    </div>
+  </div>
+</section>
+
+<!-- PRODUCTS -->
+<section id="products">
+  <div class="products-header">
+    <div>
+      <div class="section-label">Platform</div>
+      <h2 class="section-title">FOUR <span class="amber">MODULES</span>.<br>ONE INFRASTRUCTURE.</h2>
+    </div>
+    <a href="#contact" class="btn-ghost">Request Demo →</a>
+  </div>
+
+  <div class="product-cards">
+
+    <!-- RISK ENGINE -->
+    <div class="product-card fade-up">
+      <span class="product-tag">Risk Module</span>
+      <h3>RECIDIVISM RISK ENGINE</h3>
+      <p>Dynamic, bias-audited ML models that assess and track reintegration risk across dozens of live factors — updated daily, explainable by design, actionable for officers.</p>
+      <ul class="product-features">
+        <li>50+ dynamic risk factor inputs</li>
+        <li>Continuous temporal risk reassessment</li>
+        <li>Bias auditing across race, age, prior record</li>
+        <li>Officer-facing plain-language summaries</li>
+        <li>Early-warning alerts for high-risk windows</li>
+      </ul>
+    </div>
+
+    <!-- CASE AUTOMATION -->
+    <div class="product-card fade-up delay-1">
+      <span class="product-tag">Automation Module</span>
+      <h3>CASE MANAGEMENT AUTOMATION</h3>
+      <p>Eliminate the paperwork burden. Intelligent templates, auto-populated compliance reports, violation detection, and scheduled communication workflows — all integrated with existing agency systems.</p>
+      <ul class="product-features">
+        <li>Auto-generated violation and compliance reports</li>
+        <li>Smart scheduling of check-ins and hearings</li>
+        <li>Cross-agency data sync (probation, court, housing)</li>
+        <li>Audit trail with chain-of-custody logging</li>
+        <li>Mobile-first for field parole officers</li>
+      </ul>
+    </div>
+
+    <!-- COURT SCHEDULING — FULL WIDTH -->
+    <div class="product-card product-big fade-up delay-2">
+      <span class="product-tag">Court Module</span>
+      <h3>COURT SCHEDULING OPTIMISATION</h3>
+      <div class="product-big-inner">
+        <div>
+          <p>AI-powered docket intelligence that eliminates conflicts, predicts no-shows, and maximises judicial time. Built for underfunded public courts running on legacy infrastructure.</p>
+          <ul class="product-features">
+            <li>Conflict detection across multi-courtroom dockets</li>
+            <li>No-show probability scoring per case</li>
+            <li>Automatic rescheduling suggestions</li>
+            <li>Defendant reminder automation (SMS/email)</li>
+            <li>Pretrial detention time tracking & alerts</li>
+            <li>Integrates with state court management systems</li>
+          </ul>
+        </div>
+        <div class="live-widget">
+          <div class="widget-header">
+            <span>Courtroom Docket — Live View</span>
+            <div class="widget-live">
+              <span class="processing-dot"></span>
+              LIVE
+            </div>
+          </div>
+
+          <div class="schedule-row">
+            <span class="schedule-time">09:00</span>
+            <span class="schedule-room">CR-04</span>
+            <span class="schedule-case">State v. Martinez — Hearing</span>
+            <span class="schedule-status status-ok">Confirmed</span>
+          </div>
+          <div class="schedule-row">
+            <span class="schedule-time">10:15</span>
+            <span class="schedule-room">CR-02</span>
+            <span class="schedule-case">In re: Johnson Bail Review</span>
+            <span class="schedule-status status-conflict">Conflict</span>
+          </div>
+          <div class="schedule-row">
+            <span class="schedule-time">11:00</span>
+            <span class="schedule-room">CR-07</span>
+            <span class="schedule-case">State v. Chen — Sentencing</span>
+            <span class="schedule-status status-ok">Confirmed</span>
+          </div>
+          <div class="schedule-row">
+            <span class="schedule-time">13:30</span>
+            <span class="schedule-room">CR-04</span>
+            <span class="schedule-case">State v. Williams — Preliminary</span>
+            <span class="schedule-status status-pending">No-show risk 62%</span>
+          </div>
+          <div class="schedule-row">
+            <span class="schedule-time">14:45</span>
+            <span class="schedule-room">CR-11</span>
+            <span class="schedule-case">People v. Okafor — Arraignment</span>
+            <span class="schedule-status status-ok">Confirmed</span>
+          </div>
+
+          <div style="margin-top:1rem;padding-top:0.75rem;border-top:1px solid rgba(255,255,255,0.05);display:flex;gap:1rem;">
+            <div style="flex:1;text-align:center;">
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--amber);">1</div>
+              <div style="font-family:'DM Mono',monospace;font-size:0.52rem;color:var(--fog);letter-spacing:0.1em;">Conflicts today</div>
+            </div>
+            <div style="flex:1;text-align:center;">
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--cyan);">92%</div>
+              <div style="font-family:'DM Mono',monospace;font-size:0.52rem;color:var(--fog);letter-spacing:0.1em;">Rooms utilised</div>
+            </div>
+            <div style="flex:1;text-align:center;">
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--red-alert);">3</div>
+              <div style="font-family:'DM Mono',monospace;font-size:0.52rem;color:var(--fog);letter-spacing:0.1em;">High no-show risk</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LEGAL AID -->
+    <div class="product-card fade-up delay-1" style="grid-column:span 2;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;">
+        <div>
+          <span class="product-tag">Legal Aid Module</span>
+          <h3>LEGAL DOCUMENT GENERATION</h3>
+          <p>Draft motions, appeals, letters of representation, and legal briefs from structured inputs in minutes. Purpose-built for public defenders and legal aid clinics operating at 3x capacity.</p>
+          <ul class="product-features">
+            <li>Jurisdiction-aware motion and brief templates</li>
+            <li>Statute and case law citation lookup</li>
+            <li>Attorney review and e-signature workflow</li>
+            <li>Client communication letter automation</li>
+            <li>Multi-language output for underserved communities</li>
+          </ul>
+        </div>
+        <div class="live-widget" style="align-self:start;">
+          <div class="widget-header">
+            <span>Document Generator</span>
+            <span style="color:var(--green-clear);font-size:0.55rem;">READY</span>
+          </div>
+          <div style="margin-bottom:0.75rem;">
+            <div style="font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--fog);margin-bottom:0.3rem;letter-spacing:0.08em;">Document type</div>
+            <div style="background:var(--slate);padding:0.4rem 0.75rem;font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--amber);">Motion to Suppress — 4th Amendment</div>
+          </div>
+          <div style="margin-bottom:0.75rem;">
+            <div style="font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--fog);margin-bottom:0.3rem;letter-spacing:0.08em;">Jurisdiction</div>
+            <div style="background:var(--slate);padding:0.4rem 0.75rem;font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--white);">Southern District of New York</div>
+          </div>
+          <div style="margin-bottom:1rem;">
+            <div style="font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--fog);margin-bottom:0.3rem;letter-spacing:0.08em;">Relevant facts (AI-parsed from case file)</div>
+            <div style="background:var(--slate);padding:0.6rem 0.75rem;font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--ghost);line-height:1.6;">
+              Search conducted without warrant at 22:14 hrs. Defendant asserted objection. Evidence flagged for suppression review...
+            </div>
+          </div>
+          <div style="background:rgba(45,212,191,0.08);border:1px solid rgba(45,212,191,0.2);padding:0.6rem 0.75rem;display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--green-clear);">Draft ready — 4 pages</span>
+            <span style="font-family:'DM Mono',monospace;font-size:0.55rem;color:var(--fog);">Generated in 8.2s</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- IMPACT -->
+<section id="impact">
+  <div class="section-label">Why It Matters</div>
+  <h2 class="section-title">THE <span class="amber">NUMBERS</span> BEHIND<br>THE <span class="cyan">MISSION</span></h2>
+
+  <div class="impact-grid">
+    <div class="impact-cell fade-up">
+      <div class="impact-number">68%</div>
+      <div class="impact-label">Recidivism rate — the metric<br>Zynthos is designed to move</div>
+    </div>
+    <div class="impact-cell fade-up delay-1">
+      <div class="impact-number">$182B</div>
+      <div class="impact-label">Annual cost of US<br>incarceration system</div>
+    </div>
+    <div class="impact-cell fade-up delay-2">
+      <div class="impact-number">450K</div>
+      <div class="impact-label">People in pretrial detention<br>not yet convicted of anything</div>
+    </div>
+    <div class="impact-cell fade-up delay-3">
+      <div class="impact-number">3.7M</div>
+      <div class="impact-label">People on active parole<br>or probation supervision</div>
+    </div>
+    <div class="impact-cell fade-up">
+      <div class="impact-number">12X</div>
+      <div class="impact-label">Public defender caseloads vs<br>ABA recommended maximums</div>
+    </div>
+    <div class="impact-cell fade-up delay-1">
+      <div class="impact-number">&lt;5%</div>
+      <div class="impact-label">Criminal justice agencies with<br>modern analytics tooling</div>
+    </div>
+    <div class="impact-cell fade-up delay-2">
+      <div class="impact-number">$1.2T</div>
+      <div class="impact-label">Annual economic impact of<br>recidivism on communities</div>
+    </div>
+    <div class="impact-cell fade-up delay-3">
+      <div class="impact-number">40%</div>
+      <div class="impact-label">Reduction in parole violation<br>possible with better prediction</div>
+    </div>
+  </div>
+</section>
+
+<!-- ETHICS -->
+<section id="ethics">
+  <div class="section-label">Our Commitment</div>
+  <h2 class="section-title">HIGH IMPACT.<br>HIGHER <span class="amber">RESPONSIBILITY</span>.</h2>
+
+  <div class="ethics-layout">
+    <div class="ethics-text fade-up">
+      <p>
+        Criminal justice AI operates at the intersection of liberty, race, poverty, and power. There is no "move fast and break things" here. Every model we deploy has the potential to influence a life — and that demands a different kind of rigor.
+      </p>
+      <p>
+        Zynthos is built on the principle that AI in this domain must augment human judgment, never replace it. Our models are explainable by design. Our recommendations are actionable, not deterministic. Officers decide. Defendants retain rights.
+      </p>
+      <p>
+        We audit every model for racial and socioeconomic bias before deployment, and continuously throughout its lifecycle. We publish these audits publicly. We hold ourselves accountable to the communities our users serve — not just to the agencies that pay us.
+      </p>
+
+      <div style="margin-top:2rem;background:rgba(245,166,35,0.05);border:1px solid rgba(245,166,35,0.15);padding:1.5rem;">
+        <div style="font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--amber);margin-bottom:0.75rem;">Our Pledge</div>
+        <p style="font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--white);line-height:1.7;margin:0;">
+          "We will never sell a model that increases incarceration rates. We will never deprioritise bias auditing for speed-to-market. If our technology harms, we stop and we fix it. Full stop."
+        </p>
+        <div style="font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--fog);margin-top:0.75rem;">— Sanhik Roy, Founder & CEO</div>
+      </div>
+    </div>
+
+    <div class="ethics-principles fade-up delay-2">
+      <div class="ethics-item">
+        <span class="ethics-num">01</span>
+        <div>
+          <h4>Explainability First</h4>
+          <p>Every risk score comes with a plain-language breakdown of contributing factors. Black-box outputs have no place in criminal justice.</p>
+        </div>
+      </div>
+      <div class="ethics-item">
+        <span class="ethics-num">02</span>
+        <div>
+          <h4>Continuous Bias Auditing</h4>
+          <p>Models are audited against race, gender, age, geography, and socioeconomic status at deployment and quarterly thereafter. Audits are published.</p>
+        </div>
+      </div>
+      <div class="ethics-item">
+        <span class="ethics-num">03</span>
+        <div>
+          <h4>Human Authority Preserved</h4>
+          <p>Zynthos surfaces intelligence. Humans make decisions. Our system is designed to be advisory — structurally incapable of replacing officer or judicial discretion.</p>
+        </div>
+      </div>
+      <div class="ethics-item">
+        <span class="ethics-num">04</span>
+        <div>
+          <h4>Defendant Rights by Design</h4>
+          <p>All data access follows constitutional standards. Defendants have rights to know what data is held about them and how it is used in any recommendation.</p>
+        </div>
+      </div>
+      <div class="ethics-item">
+        <span class="ethics-num">05</span>
+        <div>
+          <h4>Community Accountability</h4>
+          <p>We maintain an independent ethics board including formerly incarcerated individuals, civil rights advocates, and criminal justice researchers.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOUNDER -->
+<section id="founder">
+  <div class="section-label">The Person Behind It</div>
+  <h2 class="section-title">MEET THE <span class="amber">FOUNDER</span></h2>
+
+  <div class="founder-layout">
+    <!-- FOUNDER CARD -->
+    <div class="founder-card fade-up">
+      <div class="founder-avatar">SR</div>
+      <div class="founder-name">SANHIK ROY</div>
+      <div class="founder-title">Founder & Chief Executive Officer</div>
+
+      <div class="founder-tags">
+        <span class="founder-tag">Criminal Justice</span>
+        <span class="founder-tag">AI/ML</span>
+        <span class="founder-tag">Policy</span>
+        <span class="founder-tag">Systems Design</span>
+        <span class="founder-tag">Ethics in AI</span>
+      </div>
+
+      <div style="border-top:1px solid rgba(255,255,255,0.06);padding-top:1.25rem;margin-bottom:1.25rem;">
+        <div class="casefile-row">
+          <span class="casefile-label">Based in</span>
+          <span class="casefile-value">New York, USA</span>
+        </div>
+        <div class="casefile-row">
+          <span class="casefile-label">Founded</span>
+          <span class="casefile-value">2024</span>
+        </div>
+        <div class="casefile-row">
+          <span class="casefile-label">Status</span>
+          <span class="risk-badge risk-med" style="font-size:0.55rem;">Seed Stage</span>
+        </div>
+        <div class="casefile-row">
+          <span class="casefile-label">Focus</span>
+          <span class="casefile-value" style="font-size:0.6rem;color:var(--fog);">US + Global South</span>
+        </div>
+      </div>
+
+      <div class="founder-links">
+        <a href="#contact" class="founder-link">LinkedIn</a>
+        <a href="#contact" class="founder-link">Twitter / X</a>
+        <a href="#contact" class="founder-link">Email</a>
+      </div>
+    </div>
+
+    <!-- FOUNDER BIO -->
+    <div class="founder-bio fade-up delay-2">
+      <h3>BUILDING WHERE <span>OTHERS WON'T</span> LOOK</h3>
+
+      <p>
+        Sanhik Roy spent three years embedded in the US criminal justice system — not as a defendant, but as a volunteer court observer, a legal aid clinic technologist, and later a policy researcher studying recidivism intervention programs across five states.
+      </p>
+
+      <p>
+        What he found was a system desperate for help that commercial technology had largely abandoned. Enterprise SaaS vendors saw no profitable market. Government IT was a decade behind. Parole officers were tracking 80-plus individuals on spreadsheets. Courts were scheduling hearings by fax.
+      </p>
+
+      <p>
+        Trained in machine learning and public policy, Sanhik built the first Zynthos prototype for a single county probation department in 2023. Within six months, unplanned violation rates dropped 34%. The department had never used a data tool before.
+      </p>
+
+      <p>
+        Zynthos isn't a charity and it isn't a government contractor — it's a startup that believes the most underfunded systems often contain the most transformational opportunities. Sanhik founded it on the conviction that the people who can't afford the best technology are often the ones who need it the most.
+      </p>
+
+      <div class="founder-mission">
+        <p>
+          "The goal is not to optimise the system as it exists. The goal is to build tools so good that they force the system to become something better. I want Zynthos to be the reason a parole officer has time to actually talk to the person sitting across from them."
+        </p>
+      </div>
+
+      <div class="founder-stats">
+        <div>
+          <div class="founder-stat-num">34%</div>
+          <div class="founder-stat-label">Violation rate reduction<br>in pilot county</div>
+        </div>
+        <div>
+          <div class="founder-stat-num">6</div>
+          <div class="founder-stat-label">Agencies in<br>active pilots</div>
+        </div>
+        <div>
+          <div class="founder-stat-num">3yrs</div>
+          <div class="founder-stat-label">Embedded justice<br>system research</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="section-label">Get Access</div>
+  <h2 class="section-title">JOIN THE <span class="amber">PILOT</span></h2>
+
+  <div class="contact-layout">
+    <div>
+      <div class="contact-info">
+        <h3>Request a Demo or Pilot Access</h3>
+        <p>We're working with a select group of county-level parole departments, public defenders' offices, and court systems. No RFP required. No six-month procurement cycle. Just reach out.</p>
+
+        <div class="contact-item">
+          <div class="contact-icon">✉</div>
+          <div>
+            <div class="contact-item-title">Email</div>
+            <div class="contact-item-val">hello@zynthos.ai</div>
+          </div>
+        </div>
+
+        <div class="contact-item">
+          <div class="contact-icon">📍</div>
+          <div>
+            <div class="contact-item-title">Headquarters</div>
+            <div class="contact-item-val">New York City, NY</div>
+          </div>
+        </div>
+
+        <div class="contact-item">
+          <div class="contact-icon">🔒</div>
+          <div>
+            <div class="contact-item-title">Data & Compliance</div>
+            <div class="contact-item-val">CJIS-compliant · SOC 2 Type II · FedRAMP ready</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <form class="contact-form" onsubmit="return false;">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">First Name</label>
+          <input type="text" class="form-input" placeholder="Jane">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Last Name</label>
+          <input type="text" class="form-input" placeholder="Smith">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-input" placeholder="jane@agency.gov">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Agency / Organisation</label>
+          <input type="text" class="form-input" placeholder="LA County Probation">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Agency Type</label>
+          <select class="form-select">
+            <option value="">Select type</option>
+            <option>Parole / Probation Dept.</option>
+            <option>Public Defenders Office</option>
+            <option>Court Administration</option>
+            <option>Legal Aid Clinic</option>
+            <option>State Corrections Dept.</option>
+            <option>Researcher / Academic</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">What are you trying to solve?</label>
+        <textarea class="form-textarea" placeholder="Describe your biggest operational pain point..."></textarea>
+      </div>
+      <button type="submit" class="btn-primary" style="width:100%;text-align:center;">
+        Submit Request
+      </button>
+    </form>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">ZYNT<span>HOS</span></div>
+  <div class="footer-copy">© 2024 Zynthos Inc. · Built for justice.</div>
+  <div class="footer-links">
+    <a href="#">Privacy</a>
+    <a href="#">Ethics Policy</a>
+    <a href="#">Bias Audits</a>
+    <a href="#">Press</a>
+  </div>
+</footer>
+
+<script>
+  // SCROLL FADE
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) e.target.classList.add('visible');
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+  // ANIMATED COUNTERS
+  function animateCount(el, target, suffix, duration) {
+    let start = 0;
+    const step = duration / 60;
+    const inc = target / (duration / (1000/60));
+    const timer = setInterval(() => {
+      start += inc;
+      if (start >= target) {
+        el.textContent = target.toLocaleString() + suffix;
+        clearInterval(timer);
+      } else {
+        el.textContent = Math.floor(start).toLocaleString() + suffix;
+      }
+    }, 1000/60);
+  }
+
+  // RISK BAR already animated via CSS
+
+  // SUBTLE HERO PARALLAX
+  const hero = document.getElementById('hero');
+  window.addEventListener('scroll', () => {
+    const y = window.scrollY;
+    const caseFile = document.querySelector('.hero-casefile');
+    if (caseFile && y < window.innerHeight) {
+      caseFile.style.transform = `translateY(calc(-50% + ${y * 0.15}px))`;
+    }
+  }, { passive: true });
+</script>
+
+</body>
+</html>
